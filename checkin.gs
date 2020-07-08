@@ -9,16 +9,27 @@
 // When you run it, make sure to run myFunction()
 // Let me know if you have any questions: yoshi@collegeliftoff.com
 
+var myEmail = "yoshi@collegeliftoff.org";
 var spreadsheetId = "1ExS3ypMqc3BbIXpNiJdD4udHscOayl1106rzgUcKVtE";
-var msg = "Just writing to check in on you as we haven't been in contact or met in a few weeks. Just remember that I am here to help and please let me know if you would like to schedule a meeting or have any questions.\n\nBest,\nYoshi Akutsu";
+var msg = "Just writing to check in on you as we haven't been in contact or met in awhile. Just remember that I am here to help and please let me know if you would like to schedule a meeting or have any questions.\n\nBest,\nYoshi Akutsu";
 var daysAgoToCheck = 15;
+var daysFromNowToCheck = 15;
+
+let advisorData = {};
+advisorData.fullName = "Yoshi Akutsu";
+advisorData.position = "Client Planning Advisor";
+advisorData.phoneExtension = "709";
+advisorData.advisorEmail = "yoshi@collegeliftoff.com";
 
 //
-// Don't make changes below unless you know what you're doing
+//
+// DON'T MAKE CHANGES BELOW UNLESS YOU KNOW WHAT YOU'RE DOING
+//
 //
 
 var now = new Date();
 var twoWeeksAgo = new Date(now.getTime() - ((24* daysAgoToCheck)* 60 * 60 * 1000));
+var timeFromNow = new Date(now.getTime() + ((24* daysFromNowToCheck)* 60 * 60 * 1000));
 var emailedInLastTwoWeeks = [];
 var eventInLastTwoWeeks = [];
 var clientEmails = [];
@@ -52,20 +63,26 @@ function fixFormatting(name) {
 function createDraft(emailArray) {
   var ccEmails = "";
   for (var i = 2; i < emailArray.length; i++) {
-    if (emailArray.length > 3) {
-      ccEmails = ccEmails.concat(", ", emailArray[i])
+    if (emailArray[i] != '' && i != 2) {
+      ccEmails = ccEmails.concat(",", emailArray[i]);
     }
     else {
-      ccEmails = emailArray[i];
+      ccEmails = ccEmails.concat("", emailArray[i]);
     }
-    
   }
-  GmailApp.createDraft(emailArray[1], "Just checking in" , "Hey " + fixFormatting(emailArray[0]) + " and family,\n\n" + msg, {cc: ccEmails});
+  
+  let template = HtmlService.createTemplateFromFile('email');
+  template.name = fixFormatting(emailArray[0]);
+  template.advisor = advisorData;
+
+  
+  let message = template.evaluate().getContent();
+  GmailApp.createDraft(emailArray[1], 'Just checking in', message, { htmlBody: message, cc: ccEmails, bcc: myEmail });
 }
 
 // Checks google calendar for all emails of people with events in past two weeks
 function checkCalendar() {
-  var events = CalendarApp.getDefaultCalendar().getEvents(twoWeeksAgo, now);
+  var events = CalendarApp.getDefaultCalendar().getEvents(twoWeeksAgo, timeFromNow);
   for (var i = 0; i < events.length; i++) {
     var guests = events[i].getGuestList(true)
     for (var j = 0; j < guests.length; j++) {
@@ -123,14 +140,18 @@ function checkEmail() {
   } 
 }
 
-function myFunction() {
+function main() {
   checkEmail();
   checkCalendar();
   checkClientEmails();
+  // Logger.log(emailedInLastTwoWeeks);
   var finalListEmails = emailedInLastTwoWeeks.concat(eventInLastTwoWeeks);
+  Logger.log(finalListEmails);
   // Clears duplicates
-  finalListEmails = [... new Set(eventInLastTwoWeeks)];
+  finalListEmails = [... new Set(finalListEmails)];
+  Logger.log(finalListEmails);
   var mismatch = clientEmails.filter(element => !finalListEmails.includes(element[1]));
+  // Logger.log(mismatch);
   for (var i = 0; i < mismatch.length; i++) {
     createDraft(mismatch[i]);
   }

@@ -141,18 +141,24 @@ function checkEmail() {
 }
 
 function main() {
-  checkEmail();
-  checkCalendar();
-  checkClientEmails();
-  // Logger.log(emailedInLastTwoWeeks);
-  var finalListEmails = emailedInLastTwoWeeks.concat(eventInLastTwoWeeks);
-  Logger.log(finalListEmails);
-  // Clears duplicates
-  finalListEmails = [... new Set(finalListEmails)];
-  Logger.log(finalListEmails);
-  var mismatch = clientEmails.filter(element => !finalListEmails.includes(element[1]));
-  // Logger.log(mismatch);
-  for (var i = 0; i < mismatch.length; i++) {
-    createDraft(mismatch[i]);
+  var now = new Date();
+  if (now.getDay() > 5 || now.getDay() == 0) {
+  return;
+  }
+  else {
+    checkEmail();
+    checkCalendar();
+    checkClientEmails();
+    // Logger.log(emailedInLastTwoWeeks);
+    var finalListEmails = emailedInLastTwoWeeks.concat(eventInLastTwoWeeks);
+    Logger.log(finalListEmails);
+    // Clears duplicates
+    finalListEmails = [... new Set(finalListEmails)];
+    Logger.log(finalListEmails);
+    var mismatch = clientEmails.filter(element => !finalListEmails.includes(element[1]));
+    // Logger.log(mismatch);
+    for (var i = 0; i < mismatch.length; i++) {
+      createDraft(mismatch[i]);
+    }
   }
 }
